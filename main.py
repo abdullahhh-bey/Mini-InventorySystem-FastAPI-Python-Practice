@@ -187,3 +187,15 @@ async def getProductsByPrice( price : int , db: Session = Depends(get_db)):
         
     return products
 
+
+@app.get("/products/sort-by-type/{category}")
+async def getProductByType(category : str , db: Session = Depends(get_db)):
+    products = db.query(Product).filter(Product.category == category).all()
+    
+    if not products:
+        raise HTTPException(
+            status_code=404,
+            details="No Product found"
+        )
+        
+    return products
