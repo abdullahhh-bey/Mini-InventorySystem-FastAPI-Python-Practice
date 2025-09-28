@@ -10,7 +10,7 @@ class Product(Base):
     name = Column(String(30) , nullable=False)
     price = Column(Integer , nullable=False)
     in_stock = Column(Boolean , default=True)
-    category = Column(String(50) , nullable=True)
+    category = Column(String(50) , nullable=False)
     
     
 class Customer(Base):

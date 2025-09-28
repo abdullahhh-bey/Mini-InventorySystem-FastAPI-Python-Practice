@@ -176,13 +176,14 @@ async def removeUser(id : int , db: Session = Depends(get_db)):
     return f"User:{id} removed"
 
 
-@app.get("/products" , response_model=list[ProductInfo])
-async def getProductsByCategory( type : str ,db: Session = Depends(get_db)) -> list[ProductInfo]:
-    p = db.query(Product).filter(Product.category == type).first()
-    if p is None:
+@app.get("/products/sort/{price}")
+async def getProductsByPrice( price : int , db: Session = Depends(get_db)):
+    products = db.query(Product).filter(Product.price > price).all()
+    
+    if not products:
         raise HTTPException(
             status_code=404,
-            details="No Product found"
-        )
+            detail="No Product found")
         
-    return p
+    return products
+
