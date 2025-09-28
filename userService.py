@@ -30,3 +30,17 @@ class UserService:
         self.user_list.append(new_user)
         self.user_id += 1   
         return new_user
+
+    def remove_user(self, id : int):
+        user : UserInfo = None
+        for v in self.user_list:
+            if v.id == id:
+                user = v
+        
+        if user:
+            self.user_list.remove(user)
+            return "User removed"
+        else:
+            return "No user found"
+        
+        

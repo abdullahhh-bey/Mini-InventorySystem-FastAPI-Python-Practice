@@ -1,6 +1,12 @@
 from fastapi import FastAPI , HTTPException, Depends 
-from models import AddUser , UserInfo
-from userService import UserService
+from db import get_db
+from dtos import ProductInfo , AddProduct, UpdateProduct
+from sqlalchemy.orm import Session
+from models import Product
+
+
+#defined the connection string to SQLITE 
+
 
 #just created app
 app = FastAPI()
@@ -61,30 +67,122 @@ app = FastAPI()
 #     return new
 
 #add singleton method ( made a global instace of this service )
-userService = UserService()
+# userService = UserService()
 
-#registering UserService
-def _userService() -> UserService:
-    return userService
+# #registering UserService
+# def _userService() -> UserService:
+#     return userService
 
-@app.get("/users" , response_model=list[UserInfo])
-async def getUsers(userService: UserService = Depends(_userService)) -> list[UserInfo]:
-    return userService.get_users()
+# @app.get("/users" , response_model=list[UserInfo])
+# async def getUsers(userService: UserService = Depends(_userService)) -> list[UserInfo]:
+#     return userService.get_users()
 
     
-@app.get("/users/{id}" )
-async def getUserById(id : int , userService: UserService = Depends(_userService)):
-    user = userService.get_user_by_id(id)
-    if not user:
+# @app.get("/users/{id}" )
+# async def getUserById(id : int , userService: UserService = Depends(_userService)):
+#     user = userService.get_user_by_id(id)
+#     if not user:
+#         raise HTTPException(
+#             status_code=404,
+#             detail="User not found"
+#         )
+#     return user 
+
+
+# @app.post("/users", response_model=UserInfo)
+# async def addUser( user  : AddUser , userService: UserService = Depends(_userService)) -> UserInfo:
+#     u = userService.add_user(user)
+#     return u
+    
+# @app.delete("/users/{id}")
+# async def removeUser(id : int, userService: UserService = Depends(_userService)):
+#     u = userService.remove_user(id)
+#     return u
+
+
+@app.get("/products" , response_model=list[ProductInfo])
+async def getProduct(db : Session = Depends(get_db)):
+    products = db.query(Product).all()
+    return  products
+
+
+
+@app.post("/products" , response_model=ProductInfo)
+async def createProduct( p : AddProduct , db : Session = Depends(get_db)) -> ProductInfo:
+    pro = db.query(Product).filter(Product.name == p.name).first()
+    
+    if pro:
+        raise HTTPException(
+            status_code=400,
+            details="Email already exists"
+        )
+    
+    new_product =  Product(
+        name = p.name,
+        price = p.price,
+        in_stock = True,
+        category = p.category
+    )
+    
+    db.add(new_product)
+    db.commit()
+    db.refresh(new_product)
+    return new_product
+
+
+
+@app.get("/products/{id}" , response_model=ProductInfo)
+async def getProductById(id : int , db : Session = Depends(get_db)) -> ProductInfo:
+    p = db.query(Product).filter(Product.id == id).first()
+    if not p:
         raise HTTPException(
             status_code=404,
-            detail="User not found"
+            detail="Product not found"
         )
-    return user 
+    return p
 
 
-@app.post("/users", response_model=UserInfo)
-async def addUser( user  : AddUser , userService: UserService = Depends(_userService)) -> UserInfo:
-    u = userService.add_user(user)
-    return u
-    
+@app.put("/products/{id}", response_model=ProductInfo)
+async def update_product(id: int, product: UpdateProduct, db: Session = Depends(get_db)):
+    p = db.query(Product).filter(Product.id == id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    if product.name is not None:
+        p.name = product.name
+    if product.price is not None:
+        p.price = product.price
+    if product.in_stock is not None:
+        p.in_stock = product.in_stock
+    if product.category is not None:
+        p.category = product.category
+
+    db.commit()
+    db.refresh(p)
+    return p
+
+
+@app.delete("/products/{id}")
+async def removeUser(id : int , db: Session = Depends(get_db)):
+    p = db.query(Product).filter(Product.id == id).first()
+    if p is None:
+        raise HTTPException(
+            status_code=404,
+            details="Product not found"
+        )
+        
+    db.delete(p)
+    db.commit()
+    return f"User:{id} removed"
+
+
+@app.get("/products" , response_model=list[ProductInfo])
+async def getProductsByCategory( type : str ,db: Session = Depends(get_db)) -> list[ProductInfo]:
+    p = db.query(Product).filter(Product.category == type).first()
+    if p is None:
+        raise HTTPException(
+            status_code=404,
+            details="No Product found"
+        )
+        
+    return p
