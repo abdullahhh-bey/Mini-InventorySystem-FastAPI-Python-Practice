@@ -1,6 +1,6 @@
 from fastapi import FastAPI , HTTPException, Depends 
 from db import get_db
-from dtos import ProductInfo , AddProduct, UpdateProduct , CustomerInfo, CreateCustomer, OrderInfo, CreateOrder, OrderItemInfo, CreateOrderItem
+from dtos import ProductInfo , AddProduct, UpdateProduct, CustomerWithOrders , CustomerInfo, CreateCustomer, OrderInfo, CreateOrder, OrderItemInfo, CreateOrderItem
 from sqlalchemy.orm import Session
 from models import Product , Customer , Order, OrderItems
 

@@ -75,3 +75,13 @@ class CreateOrderItem(BaseModel):
      product_id : int
      
      
+     
+class CustomerWithOrders(BaseModel):
+    name : str
+    email : str
+    orders : Optional[list[OrderInfo]] = []
+    
+    #mapping
+    class Config:
+        from_attributes = True
+        
