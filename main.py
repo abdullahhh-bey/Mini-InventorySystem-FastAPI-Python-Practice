@@ -1,8 +1,8 @@
 from fastapi import FastAPI , HTTPException, Depends 
 from db import get_db
-from dtos import ProductInfo , AddProduct, UpdateProduct , CustomerInfo, CreateCustomer, OrderInfo, CreateOrder
+from dtos import ProductInfo , AddProduct, UpdateProduct , CustomerInfo, CreateCustomer, OrderInfo, CreateOrder, OrderItemInfo, CreateOrderItem
 from sqlalchemy.orm import Session
-from models import Product , Customer
+from models import Product , Customer , Order, OrderItems
 
 
 #defined the connection string to SQLITE 
@@ -223,6 +223,7 @@ async def AddCustomer( c : CreateCustomer ,db: Session = Depends(get_db)) -> Cus
     return new_customer
 
 
+
 @app.get("/customers", response_model=list[CustomerInfo])
 async def getCustomers(db: Session = Depends(get_db)) -> list[CustomerInfo]:
     c = db.query(Customer).all()
@@ -234,3 +235,88 @@ async def getCustomers(db: Session = Depends(get_db)) -> list[CustomerInfo]:
         
     return c
 
+
+@app.get("/customers/{id}" , response_model=CustomerInfo)
+async def getCustomerById(id : int , db: Session = Depends(get_db)) -> CustomerInfo:
+    c = db.query(Customer).filter(Customer.id == id).first()
+    if c is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No Customer"
+        )
+    
+    return c
+
+
+
+@app.post("/orders" , response_model=OrderInfo)
+async def AddOrder( order : CreateOrder ,db: Session = Depends(get_db)) -> OrderInfo:
+    check = db.query(Customer).filter(Customer.id == order.customer_id).first()
+    if check is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Customer not exist"
+        )
+        
+    new_order = Order(
+        orderDate = order.orderDate,
+        customer_id = order.customer_id
+    )
+    
+    db.add(new_order)
+    db.commit()
+    db.refresh(new_order)
+    return new_order
+
+
+
+@app.get("/orders" , response_model=list[OrderInfo])
+async def getOrder(db: Session = Depends(get_db)) -> list[OrderInfo]:
+    o = db.query(Order).all()
+    if not o:
+        raise HTTPException(
+            status_code=404,
+            detail="No Orders yet"
+        )
+    return o
+
+
+
+@app.post("/orderItems" , response_model=OrderItemInfo)
+async def AddOrderItem( o : CreateOrderItem ,db: Session = Depends(get_db)) -> OrderItemInfo:
+    orderCheck = db.query(Order).filter(Order.id == o.order_id).first()
+    if orderCheck is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No Order found with this id"
+        )
+        
+    productCheck = db.query(Product).filter(Product.id == o.product_id).first()
+    if productCheck is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No Product found with this id"
+        )
+        
+    orderItem = OrderItems(
+        quantity = o.quantity,
+        order_id = o.order_id,
+        product_id = o.product_id
+    )
+    
+    db.add(orderItem)
+    db.commit()
+    db.refresh(orderItem)
+    return orderItem
+    
+
+
+@app.get("/orderItems" , response_model=list[OrderItemInfo])
+async def getOrderItems(db: Session = Depends(get_db)) -> list[OrderItemInfo]:
+    items = db.query(OrderItems).all()
+    if not items:
+        raise HTTPException(
+            status_code=404,
+            detail="No Order Items yet"
+        )
+    return items

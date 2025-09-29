@@ -1,4 +1,5 @@
 from pydantic import Field, BaseModel
+from typing import Optional
 from datetime import datetime
 
 class AddProduct(BaseModel):
@@ -46,15 +47,31 @@ class CustomerInfo(BaseModel):
 class CreateOrder(BaseModel):
     orderDate : datetime
     customer_id : int
+
+
+class OrderItemInfo(BaseModel):
+    id : int
+    order_id : int
+    quantity : int
+    product : ProductInfo
     
+    class Config:
+        from_attributes = True
+        
 
 class OrderInfo(BaseModel):
     id : int
     orderDate : datetime
     customer_id : int
-    customer : CustomerInfo
+    order_items : Optional[list[OrderItemInfo]] = []
     
     class Config:
         from_attributes = True
         
  
+class CreateOrderItem(BaseModel):
+     order_id : int
+     quantity : int
+     product_id : int
+     
+     

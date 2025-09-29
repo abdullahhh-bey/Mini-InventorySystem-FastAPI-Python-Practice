@@ -1,24 +1,25 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
+import urllib
 
-#Database connection string
-DATABASE_URL = "sqlite:///./sample-test.db"
-
-#Database Setup ( like dbcontext )
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False} 
+# Using Windows Authentication, no password needed
+params = urllib.parse.quote_plus(
+    "DRIVER={ODBC Driver 18 for SQL Server};"
+    "SERVER=DESKTOP-JOGOILA\SQLEXPRESS01;"   
+    "DATABASE=InventoryDb;"
+    "Trusted_Connection=yes;"
+    "TrustServerCertificate=yes;"
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+DATABASE_URL = f"mssql+pyodbc:///?odbc_connect={params}"
 
+engine = create_engine(DATABASE_URL, echo=True)
 
-#Making a base class so that models can inherit it
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+
 Base = declarative_base()
 
 
-#getting the database session
 def get_db():
     db = SessionLocal()
     try:
