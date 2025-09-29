@@ -320,3 +320,14 @@ async def getOrderItems(db: Session = Depends(get_db)) -> list[OrderItemInfo]:
             detail="No Order Items yet"
         )
     return items
+
+
+@app.get("/customers/{id}/orders" , response_model=CustomerWithOrders)
+async def getCustomersWithOrders(id : int, db: Session = Depends(get_db)) -> CustomerWithOrders:
+    c = db.query(Customer).filter(Customer.id == id).first()
+    if c is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No Customer found!"
+        )
+    return c
