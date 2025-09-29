@@ -1,6 +1,6 @@
 from fastapi import FastAPI , HTTPException, Depends 
 from db import get_db
-from dtos import ProductInfo , AddProduct, UpdateProduct, CustomerResponse , CreateCustomer, CreateOrder, CustomerWithOrder, OrderWithCustomer
+from dtos import ProductInfo , AddProduct, UpdateProduct , CustomerInfo, CreateCustomer, OrderInfo, CreateOrder
 from sqlalchemy.orm import Session
 from models import Product , Customer
 
@@ -195,27 +195,26 @@ async def getProductByType(category : str , db: Session = Depends(get_db)):
     if not products:
         raise HTTPException(
             status_code=404,
-            details="No Product found"
+            detail="No Product found"
         )
         
     return products
 
 
 
-
-
-@app.post("/customers" , response_model=CustomerResponse)
-async def addCustomer(customer : CreateCustomer ,  db: Session = Depends(get_db)) -> CustomerResponse:
-    check = db.query(Customer).filter(Customer.email == customer.email).first()
+#start here 
+@app.post("/customers" , response_model=CustomerInfo)
+async def AddCustomer( c : CreateCustomer ,db: Session = Depends(get_db)) -> CustomerInfo:
+    check = db.query(Customer).filter(Customer.email == c.email).first()
     if check:
         raise HTTPException(
             status_code=400,
-            details="Email already exist"
+            detail="Email already exist!"
         )
         
     new_customer = Customer(
-        name = customer.name,
-        email = customer.email
+        name = c.name,
+        email = c.email
     )
     
     db.add(new_customer)
@@ -224,13 +223,14 @@ async def addCustomer(customer : CreateCustomer ,  db: Session = Depends(get_db)
     return new_customer
 
 
-@app.get("/customers" , response_model=list[CustomerResponse])
-async def getCustomers(db: Session = Depends(get_db)) -> list[CustomerResponse]:
+@app.get("/customers", response_model=list[CustomerInfo])
+async def getCustomers(db: Session = Depends(get_db)) -> list[CustomerInfo]:
     c = db.query(Customer).all()
-    if c is None:
+    if not c:
         raise HTTPException(
             status_code=404,
-            details="No customers yet"
+            detail="No Customers"
         )
         
     return c
+

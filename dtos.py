@@ -19,7 +19,7 @@ class ProductInfo(BaseModel):
     category : str
     
     class Config:
-        orm_mode = True   # <-- allows returning SQLAlchemy objects
+        from_attributes = True   # <-- allows returning SQLAlchemy objects
     
     
 class UpdateProduct(BaseModel):
@@ -29,52 +29,32 @@ class UpdateProduct(BaseModel):
     category : str | None = None
     
 
-
-
-class CreateOrder(BaseModel):
-    total_amount : int
-    order_date : datetime
-    customer_id : int
-
-
 class CreateCustomer(BaseModel):
     name : str
     email : str
     
     
-
-class CustomerResponse(BaseModel):
+class CustomerInfo(BaseModel):
     id : int
     name : str
     email : str
     
     class Config:
-        orm_mode = True
+        from_attributes = True
         
         
-class OrderResponse(BaseModel):
-    id : int
+class CreateOrder(BaseModel):
     orderDate : datetime
-    
-    class Config:
-        orm_mode = True
-        
-        
-class CustomerWithOrder(BaseModel):
-    id : int
-    name : str
-    email : str
-    
-    orders : list[OrderResponse] 
-    
-    class Config:
-        orm_true = True
+    customer_id : int
     
 
-class OrderWithCustomer(BaseModel):
+class OrderInfo(BaseModel):
     id : int
     orderDate : datetime
-    customer : CustomerResponse
+    customer_id : int
+    customer : CustomerInfo
     
     class Config:
-        orm_true = True
+        from_attributes = True
+        
+ 

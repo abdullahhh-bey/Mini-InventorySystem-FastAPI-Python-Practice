@@ -13,7 +13,7 @@ class Product(Base):
     in_stock = Column(Boolean , default=True)
     category = Column(String(50) , nullable=False)
 
-    order_Item = relationship("OrderItems" , back_populates="products")
+    order_item = relationship("OrderItems" , back_populates="product")
     
     
 
@@ -28,7 +28,7 @@ class OrderItems(Base):
     order = relationship("Order" , back_populates="order_items")
     
     product_id = Column(Integer , ForeignKey("Products.id"))
-    products = relationship("Product" , back_populates="order_item")
+    product = relationship("Product" , back_populates="order_item")
 
     
     
